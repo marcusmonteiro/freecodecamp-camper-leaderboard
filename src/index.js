@@ -1,3 +1,4 @@
+require('sanitize.css/sanitize.css')
 require('./main.css')
 var Elm = require('./Main.elm')
 
