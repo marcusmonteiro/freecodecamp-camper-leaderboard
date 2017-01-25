@@ -1,7 +1,7 @@
 module App exposing (Model, Msg, init, view, update, subscriptions)
 
 
-import Html exposing (Html, img, div, text, table, tbody, td, thead, tr, th)
+import Html exposing (Html, button, img, div, text, table, tbody, td, thead, tr, th)
 import Html.Attributes exposing (alt, class, src, style)
 import Html.Events exposing (onClick)
 import Http exposing (get, send)
@@ -39,7 +39,7 @@ update msg model =
             (model, loadTop100CampersRecent)
 
         LoadTop100CampersRecent (Ok top100CampersRecent) ->
-            (top100CampersRecent, Cmd.none)
+            (List.sortWith descendingRecent top100CampersRecent, Cmd.none)
 
         LoadTop100CampersRecent (Err _) ->
             (model, Cmd.none)
@@ -48,10 +48,24 @@ update msg model =
             (model, loadTop100CampersAllTime)
 
         LoadTop100CampersAllTime (Ok top100CampersAllTime) ->
-            (top100CampersAllTime, Cmd.none)
+            (List.sortWith descendingAllTime top100CampersAllTime, Cmd.none)
 
         LoadTop100CampersAllTime (Err _) ->
             (model, Cmd.none)
+
+
+descendingRecent a b =
+    case compare a.recent b.recent of
+        LT -> GT
+        EQ -> EQ
+        GT -> LT
+
+
+descendingAllTime a b =
+    case compare a.alltime b.alltime of
+        LT -> GT
+        EQ -> EQ
+        GT -> LT
 
 
 loadTop100CampersRecent : Cmd Msg
@@ -104,8 +118,8 @@ view model =
                               [ tr []
                                    [ th [] [text "#"]
                                    , th [] [text "Camper Name"]
-                                   , th [onClick FetchTop100CampersRecent] [text "Points in past 30 days"]
-                                   , th [onClick FetchTop100CampersAllTime] [text "All time points"]
+                                   , th [] [button [class "btn btn-default", onClick FetchTop100CampersRecent] [text "Points in past 30 days"]]
+                                   , th [] [button [class "btn btn-default", onClick FetchTop100CampersAllTime] [text "All time points"]]
                                    ]
                               ]
                       , tbody [] (List.map (camperTableRow) (List.indexedMap (,) model))
@@ -127,8 +141,8 @@ camperTableRow (rank, camper) =
                      []
                , text (camper.username)
                ]
-       , td [] [text (toString camper.alltime)]
        , td [] [text (toString camper.recent)]
+       , td [] [text (toString camper.alltime)]
        ]
 
 
