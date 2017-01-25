@@ -1,8 +1,8 @@
 module App exposing (Model, Msg, init, view, update, subscriptions)
 
 
-import Html exposing (Html, img, text, table, tbody, td, thead, tr, th)
-import Html.Attributes exposing (alt, src)
+import Html exposing (Html, img, div, text, table, tbody, td, thead, tr, th)
+import Html.Attributes exposing (alt, class, src, style)
 import Html.Events exposing (onClick)
 import Http exposing (get, send)
 import Json.Decode exposing (Decoder, int, list, string)
@@ -96,25 +96,36 @@ camperDecoder =
 
 view : Model -> Html Msg
 view model =
-    table []
-          [ thead []
-                  [ tr []
-                       [ th [] [text "#"]
-                       , th [] [text "Camper Name"]
-                       , th [onClick FetchTop100CampersRecent] [text "Points in past 30 days"]
-                       , th [onClick FetchTop100CampersAllTime] [text "All time points"]
-                       ]
-                  ]
-          , tbody [] (List.map (camperTableRow) (List.indexedMap (,) model))
-          ]
+    div [class "container-fluid"]
+        [ div [class "row"]
+              [ div [class "table-responsive"]
+                    [ table [class "table table-hover"]
+                      [ thead []
+                              [ tr []
+                                   [ th [] [text "#"]
+                                   , th [] [text "Camper Name"]
+                                   , th [onClick FetchTop100CampersRecent] [text "Points in past 30 days"]
+                                   , th [onClick FetchTop100CampersAllTime] [text "All time points"]
+                                   ]
+                              ]
+                      , tbody [] (List.map (camperTableRow) (List.indexedMap (,) model))
+                      ]
+                    ]
+              ]
+        ]
 
 
 camperTableRow : (Int, Camper) -> Html Msg
 camperTableRow (rank, camper) =
     tr []
        [ td [] [text (toString rank)]
-       , td [] [ img [src camper.img, alt "Camper profile picture"] []
-               , text camper.username
+       , td [] [ img [ class "img-responsive img-thumbnail"
+                     , src camper.img
+                     , alt (String.concat ["Camper ", camper.username, " picture"])
+                     , style [("max-width", "7em")]
+                     ]
+                     []
+               , text (camper.username)
                ]
        , td [] [text (toString camper.alltime)]
        , td [] [text (toString camper.recent)]
