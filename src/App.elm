@@ -3,6 +3,7 @@ module App exposing (Model, Msg, init, view, update, subscriptions)
 
 import Html exposing (Html, img, text, table, tbody, td, thead, tr, th)
 import Html.Attributes exposing (alt, src)
+import Html.Events exposing (onClick)
 import Http exposing (get, send)
 import Json.Decode exposing (Decoder, int, list, string)
 import Json.Decode.Pipeline exposing (decode, required)
@@ -25,17 +26,31 @@ init =
     ([], loadTop100CampersRecent)
 
 
-type Msg =
-    LoadTop100CampersRecent (Result Http.Error Model)
-
+type Msg
+  = FetchTop100CampersRecent
+  | LoadTop100CampersRecent (Result Http.Error Model)
+  | FetchTop100CampersAllTime
+  | LoadTop100CampersAllTime (Result Http.Error Model)
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
+        FetchTop100CampersRecent ->
+            (model, loadTop100CampersRecent)
+
         LoadTop100CampersRecent (Ok top100CampersRecent) ->
             (top100CampersRecent, Cmd.none)
 
         LoadTop100CampersRecent (Err _) ->
+            (model, Cmd.none)
+
+        FetchTop100CampersAllTime ->
+            (model, loadTop100CampersAllTime)
+
+        LoadTop100CampersAllTime (Ok top100CampersAllTime) ->
+            (top100CampersAllTime, Cmd.none)
+
+        LoadTop100CampersAllTime (Err _) ->
             (model, Cmd.none)
 
 
@@ -48,6 +63,19 @@ fetchTop100CampersRecent: Http.Request Model
 fetchTop100CampersRecent =
     let
       url = "https://fcctop100.herokuapp.com/api/fccusers/top/recent"
+    in
+      get url campersDecoder
+
+
+loadTop100CampersAllTime : Cmd Msg
+loadTop100CampersAllTime =
+    send LoadTop100CampersAllTime fetchTop100CampersAllTime
+
+
+fetchTop100CampersAllTime: Http.Request Model
+fetchTop100CampersAllTime =
+    let
+      url = "https://fcctop100.herokuapp.com/api/fccusers/top/alltime"
     in
       get url campersDecoder
 
@@ -73,8 +101,8 @@ view model =
                   [ tr []
                        [ th [] [text "#"]
                        , th [] [text "Camper Name"]
-                       , th [] [text "Points in past 30 days"]
-                       , th [] [text "All time points"]
+                       , th [onClick FetchTop100CampersRecent] [text "Points in past 30 days"]
+                       , th [onClick FetchTop100CampersAllTime] [text "All time points"]
                        ]
                   ]
           , tbody [] (List.map (camperTableRow) (List.indexedMap (,) model))
